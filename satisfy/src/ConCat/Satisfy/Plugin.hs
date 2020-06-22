@@ -13,7 +13,7 @@ import System.IO.Unsafe (unsafePerformIO)
 import GhcPlugins as GHC
 import Class (classAllSelIds)
 import MkId (mkDictSelRhs)
-import DynamicLoading
+import GHC.Runtime.Loader
 
 import ConCat.BuildDictionary (buildDictionary)
 import ConCat.Inline.Plugin (findId)

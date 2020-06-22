@@ -1791,7 +1791,7 @@ class BottomCat k a b where
 --   bottomC = bottomC &&& bottomC
 
 instance (BottomCat k a b, ClosedCat k, Ok4 k z b a (z -> b)) => BottomCat k a (z -> b) where
-  bottomC = curry (bottomC . exl) <+ okProd @k @a @ z
+  bottomC = curry (bottomC . exl) <+ okProd @k @a @z
 
 instance BottomCat (->) a b where bottomC = error "bottomC for (->) evaluated"
 

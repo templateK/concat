@@ -61,7 +61,7 @@ simplifyExpr dflags inline expr
        Err.dumpIfSet dflags (dopt Opt_D_dump_simpl_stats dflags)
                "Simplifier statistics" (pprSimplCount counts)
        Err.dumpIfSet_dyn dflags Opt_D_dump_simpl "Simplified expression"
-                     (ppr expr')
+                     Err.FormatCore (ppr expr')
        return expr'
 
 -- Copied from SimplCore (not exported)

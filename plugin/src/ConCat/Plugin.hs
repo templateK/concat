@@ -47,7 +47,7 @@ import GhcPlugins as GHC hiding (substTy,cat)
 import Class (classAllSelIds)
 import CoreArity (etaExpand)
 import CoreLint (lintExpr)
-import DynamicLoading
+import GHC.Runtime.Loader
 import MkId (mkDictSelRhs,coerceId)
 import Pair (Pair(..))
 import PrelNames (leftDataConName,rightDataConName
@@ -70,6 +70,7 @@ import FamInstEnv
 import ConCat.Misc (Unop,Binop,Ternop,PseudoFun(..),(~>))
 import ConCat.BuildDictionary
 -- import ConCat.Simplify
+
 
 -- Information needed for reification. We construct this info in
 -- CoreM and use it in the ccc rule, which must be pure.
@@ -216,7 +217,7 @@ ccc (CccEnv {..}) (Ops {..}) cat =
   Trying("top Case of bottom")
      e@(Case (collectArgs -> (Var v,_args)) _wild _rhsTy _alts)
        |  v == bottomV
-       ,  FunTy dom cod <- exprType e
+       ,  FunTy _ dom cod <- exprType e
        -> Doing("top Case of bottom")
           mkBottomC cat dom cod
      Trying("top Case live wild")
@@ -264,8 +265,8 @@ ccc (CccEnv {..}) (Ops {..}) cat =
      -- This version fails gracefully when we can't make the coercions.
      -- Then we can see further into the error.
      e@(Cast e' (coercionRole -> Representational))
-       | FunTy a  b  <- exprType e
-       , FunTy a' b' <- exprType e'
+       | FunTy _ a  b  <- exprType e
+       , FunTy _ a' b' <- exprType e'
        , Just coA    <- mkCoerceC_maybe cat a a'
        , Just coB    <- mkCoerceC_maybe cat b' b
        ->
@@ -484,7 +485,10 @@ ccc (CccEnv {..}) (Ops {..}) cat =
        | not (x `isFreeIn` scrut)
        -> Doing("lam Case hoist")
           return $
-           mkCcc (Case scrut wild (FunTy xty ty) [(dc,vs, Lam x rhs)])
+           -- FIXME: data AnonArgFlag = InvisArg | VisArg
+           --        I don't know what constructor goes to FunTy in this context.
+           --        see GHC Note [AnonArgFlag vs. ForallVisFlag]
+           mkCcc (Case scrut wild (FunTy VisArg xty ty) [(dc,vs, Lam x rhs)])
           -- pprPanic ("lam Case hoist") empty
      Trying("lam Case to let")
      Case scrut v@(isDeadBinder -> False) _rhsTy [(_, bs, rhs)]
@@ -1156,7 +1160,7 @@ mkOps (CccEnv {..}) guts annotations famEnvs dflags inScope cat = Ops {..}
              = -- dtrace "addArg isPred" (ppr arg) $
                -- onDictMaybe may fail (Nothing) in the target category.
                onDictMaybe e  --  fails gracefully
-             | FunTy dom _ <- exprType e
+             | FunTy _ dom _ <- exprType e
              = -- dtrace "addArg otherwise" (ppr arg) $
                -- TODO: logic to sort out cat vs non-cat args.
                -- We currently don't have both.
@@ -1181,7 +1185,7 @@ mkOps (CccEnv {..}) guts annotations famEnvs dflags inScope cat = Ops {..}
      k `eqType` cat
    isCatTy _ = False
    hasCatArg :: CoreExpr -> Bool
-   hasCatArg (exprType -> FunTy t _) = isCatTy t
+   hasCatArg (exprType -> FunTy _ t _) = isCatTy t
    hasCatArg _                       = False
    reCat :: ReExpr
    reCat = -- (traceFail "reCat" <+ ) $
@@ -1904,7 +1908,7 @@ isPairVar = (== "GHC.Tuple.(,)") . fqVarName
 isMonoTy :: Type -> Bool
 isMonoTy (TyConApp _ tys) = all isMonoTy tys
 isMonoTy (AppTy u v)      = isMonoTy u && isMonoTy v
-isMonoTy (FunTy u v)      = isMonoTy u && isMonoTy v
+isMonoTy (FunTy _ u v)    = isMonoTy u && isMonoTy v
 isMonoTy (LitTy _)        = True
 isMonoTy _                = False
 

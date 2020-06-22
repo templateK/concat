@@ -15,7 +15,7 @@ import Data.List (elemIndex)
 import GhcPlugins
 import Class (classAllSelIds)
 import MkId (mkDictSelRhs)
-import DynamicLoading
+import GHC.Runtime.Loader
 
 plugin :: Plugin
 plugin = defaultPlugin { installCoreToDos = install

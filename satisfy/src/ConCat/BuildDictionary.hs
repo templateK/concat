@@ -39,15 +39,28 @@ import Control.Arrow (second)
 
 import TyCoRep (CoercionHole(..))
 import TcHsSyn (emptyZonkEnv,zonkEvBinds)
-import           TcRnMonad (getCtLocM,traceTc)
-import           TcRnTypes (cc_ev)
+import TcRnMonad (getCtLocM,traceTc)
+import Constraint (CtEvidence(CtWanted),
+                  ctev_pred,
+                  ctev_dest,
+                  ctev_nosh,
+                  ctev_loc,
+                  mkGivens,
+                  mkNonCanonical,
+                  TcEvDest(EvVarDest),
+                  ShadowInfo(WOnly),
+                  mkSimpleWC,
+                  cc_ev
+                  )
+import TcOrigin (CtOrigin(GivenOrigin), SkolemInfo(UnkSkol))
+import Predicate (isEvVar)
 import TcInteract (solveSimpleGivens)
 import TcSMonad -- (TcS,runTcS)
 import TcEvidence (evBindMapBinds)
 import TcErrors(warnAllUnsolved)
 
-import DsMonad
-import DsBinds
+import GHC.HsToCore.Monad
+import GHC.HsToCore.Binds
 import           TcSimplify
 import           TcRnTypes
 import ErrUtils (pprErrMsgBagWithLoc)
