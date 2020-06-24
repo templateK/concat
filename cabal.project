@@ -8,8 +8,10 @@ packages:
           ./hardware/concat-hardware.cabal
           ./graphics/concat-graphics.cabal
           ./examples/concat-examples.cabal
-          ./../netlist-kit-kufp/*/*.cabal
+          ./deps/netlist/*/*.cabal
           --- cloned from git@github.com:ku-fpg/netlist.git
-          ./../vector-sized/*.cabal
+          ./deps/vector-sized/vector-sized.cabal
           --- cloned from git@github.com:expipiplus1/vector-sized.git
 documentation: False
+
+allow-newer: all
